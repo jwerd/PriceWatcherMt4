@@ -10,6 +10,7 @@
 #property indicator_chart_window
 
 extern int AlertMicroPipRange=10;
+extern bool IgnoreAfterCandleClose = true;
 
 input int      obj_type = 1; // horizontal line by default
 double current_obj_count = 0;
@@ -17,6 +18,7 @@ string current_objects[];
 string current_object = "none";
 double current_price_line;
 double current_price;
+datetime LastAlertTime;
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
@@ -40,6 +42,7 @@ int start()
       set_last_object();
       ignore_all_but_last_object(current_object);
       Print("Last object", (string)current_object);
+      LastAlertTime = Time[0];
    }
    
    if((string)current_object != "none") {
@@ -55,6 +58,13 @@ int start()
       if (below <= current_price_line && above >= current_price_line && StringSubstr(current_object, 0, 8) != "_ignore_") {
          Alert("PRICE WITHIN RANGE OF LINE on ",Symbol()," TimeFrame: ",Period(), " at ",TimeToStr(TimeCurrent(),TIME_SECONDS));
          Print("PRICE WITHIN RANGE OF LINE on ",Symbol()," TimeFrame: ",Period(), " at ",TimeToStr(TimeCurrent(),TIME_SECONDS));
+         ignore_object(current_object);
+      }
+   }
+   
+   // next candle? disregard
+   if(IgnoreAfterCandleClose) {
+      if (LastAlertTime < Time[0]) {
          ignore_object(current_object);
       }
    }
